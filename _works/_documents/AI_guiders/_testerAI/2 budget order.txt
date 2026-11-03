@@ -1,0 +1,4 @@
+'ProposalTime'  
+For 'Hourly' projects, 'ProposalTime' refers to the number of hours you can work per week, which is generally 40. (Unit: days)  
+For 'Fixed' projects, 'ProposalTime' refers to the time required to complete the project, which is generally 7. (Unit: days)  
+Decide 'ProposalTime' based on your judgment, especially for 'Fixed' projects, carefully considering how many days the client expects.

@@ -1,0 +1,4 @@
+make bid this for project
+
+The output must be in json format. 
+json has a property called 'ProposalText', which represents the bid statement, and 'ProposalBudget' and 'ProposalTime'(unit: day).

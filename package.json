@@ -1,0 +1,23 @@
+{
+    "name": "anytimefreelancer_server",
+    "version": "4.1.0",
+    "description": "A server for the Anytime Freelancer Chrome extension",
+    "main": "_works/_codes/server.js",
+    "scripts": {
+        "start": "node _works/_codes/server.js"
+    },
+    "dependencies": {
+        "@google/generative-ai": "^0.24.0",
+        "body-parser": "^1.20.2",
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "google-translate-api-x": "^10.7.2",
+        "googleapis": "^118.0.0"
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "author": "",
+    "license": "MIT",
+    "type": "module"
+}
