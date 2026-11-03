@@ -54,6 +54,7 @@ import express from "express";
 import { google } from "googleapis";
 import cors from "cors";
 import bodyParser from "body-parser";
+import fs from "node:fs";
 
 
 
@@ -79,10 +80,23 @@ app.use(cors({
 }));
 app.use(bodyParser.json({ limit: "10mb" }));
 
+app.get("/", (req, res) => {
+    res.json({ status: "ok" });
+});
+
 // Google Sheets API configuration
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const SHEET_ID = "1M1Cd3Ds0cOUb9ibAfffzgjej5AM-ELnTNC0jwspxEfs"; // Google Sheets ID
+const serviceAccountJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+    || "_works/_documents/freelanceranytime.json";
+const credentials = serviceAccountJson
+    ? JSON.parse(serviceAccountJson)
+    : fs.existsSync(credentialsPath)
+        ? JSON.parse(fs.readFileSync(credentialsPath, "utf8"))
+        : undefined;
 const auth = new google.auth.GoogleAuth({
+    ...(credentials ? { credentials } : {}),
     scopes: SCOPES,
 });
 
@@ -181,6 +195,27 @@ async function initializeHeaderIndexes() {
         throw new Error(`The ${EVENTS_SHEET_NAME} sheet needs bid, username, result/status, and project_id or href columns.`);
     }
 }
+
+let initializationPromise;
+function ensureInitialized() {
+    if (!initializationPromise) {
+        initializationPromise = initializeHeaderIndexes().catch(error => {
+            initializationPromise = undefined;
+            throw error;
+        });
+    }
+    return initializationPromise;
+}
+
+app.use(async (req, res, next) => {
+    try {
+        await ensureInitialized();
+        next();
+    } catch (error) {
+        console.error("Failed to initialize header indexes:", error);
+        res.status(503).json({ error: "Service initialization failed. Check Google Sheets credentials and configuration." });
+    }
+});
 
 let apiProjectsWriteQueue = Promise.resolve();
 
@@ -845,13 +880,16 @@ async function handleDetailAdd(req, res) {
 
 app.post("/add_detail", handleDetailAdd);
 
-// Start server
-try {
-    await initializeHeaderIndexes();
-    app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-} catch (error) {
-    console.error("Failed to initialize header indexes:", error);
-    //process.exit(1);
+export default app;
+
+if (process.env.VERCEL !== "1") {
+    ensureInitialized()
+        .then(() => app.listen(Number(process.env.PORT) || PORT, () => {
+            console.log(`Server running on http://localhost:${Number(process.env.PORT) || PORT}`);
+        }))
+        .catch(error => {
+            console.error("Failed to initialize header indexes:", error);
+        });
 }
 
 let alarmsData={};
